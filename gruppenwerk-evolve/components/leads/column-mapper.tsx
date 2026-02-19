@@ -57,7 +57,18 @@ const REQUIRED_FIELDS: MappingField[] = MAPPING_FIELDS
 function autoMapColumn(csvHeader: string): MappingField | '' {
   const h = csvHeader.toLowerCase().trim().replace(/[_\-\.]+/g, ' ');
 
-  // E-Mail (vor "name" pruefen, da "email" oft im Spaltennamen)
+  // Firmenname – VOR E-Mail pruefen, weil "Company Name for Emails" sonst
+  // faelschlicherweise als E-Mail erkannt wird
+  if (
+    h.includes('company name') || h.includes('firmenname') || h.includes('firma') ||
+    h.includes('organization') || h.includes('organisation') || h.includes('unternehmen') ||
+    h === 'company' || h === 'companyname'
+  ) {
+    return 'company_name';
+  }
+
+  // E-Mail – nur wenn der Spaltenname wirklich eine E-Mail-Spalte meint
+  // (nicht "Company Name for Emails" o.ae., das wurde oben schon gefangen)
   if (h.includes('email') || h.includes('e-mail') || h.includes('e mail') || h === 'mail') {
     return 'contact_email';
   }
@@ -71,18 +82,8 @@ function autoMapColumn(csvHeader: string): MappingField | '' {
   if (h.includes('website') || h.includes('webseite') || h.includes('homepage')) {
     return 'website';
   }
-  // "url" oder "web" nur wenn allein stehend, nicht als Teil von "linkedin url"
   if ((h === 'url' || h === 'web') && !h.includes('linkedin')) {
     return 'website';
-  }
-
-  // Firmenname
-  if (
-    h.includes('company name') || h.includes('firmenname') || h.includes('firma') ||
-    h.includes('organization') || h.includes('organisation') || h.includes('unternehmen') ||
-    h === 'company' || h === 'companyname'
-  ) {
-    return 'company_name';
   }
 
   // Ansprechpartner / Kontaktname
