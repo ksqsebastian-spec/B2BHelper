@@ -23,7 +23,13 @@ export default function LoginPage(): React.ReactNode {
         body: JSON.stringify({ password }),
       });
 
-      const data = await response.json();
+      let data: { error?: string; success?: boolean };
+      try {
+        data = await response.json();
+      } catch {
+        setError(`Server-Fehler (${response.status}). Bitte Vercel-Logs pruefen.`);
+        return;
+      }
 
       if (!response.ok) {
         setError(data.error ?? 'Anmeldung fehlgeschlagen.');
@@ -32,8 +38,12 @@ export default function LoginPage(): React.ReactNode {
 
       router.push('/');
       router.refresh();
-    } catch {
-      setError('Ein unbekannter Fehler ist aufgetreten.');
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? `Fehler: ${err.message}`
+          : 'Ein unbekannter Fehler ist aufgetreten.'
+      );
     } finally {
       setIsLoading(false);
     }
