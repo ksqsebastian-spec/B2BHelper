@@ -24,7 +24,6 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    // Supabase-Benutzer automatisch erstellen oder aktualisieren
     const serviceClient = await createServiceClient();
     const { data: userList, error: listError } =
       await serviceClient.auth.admin.listUsers();
@@ -41,6 +40,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
 
     if (!existingUser) {
+      // Benutzer anlegen – Trigger-Fehler (z.B. fehlende Tabellen) ignorieren
       const { error: createError } =
         await serviceClient.auth.admin.createUser({
           email: AUTH_EMAIL,
@@ -49,13 +49,11 @@ export async function POST(request: Request): Promise<NextResponse> {
         });
 
       if (createError) {
-        return NextResponse.json(
-          { error: `Benutzer erstellen fehlgeschlagen: ${createError.message}` },
-          { status: 500 }
-        );
+        // Wenn der Trigger fehlschlaegt, wurde der User evtl. trotzdem
+        // in auth.users angelegt. Direkt signIn versuchen.
+        console.warn('createUser Warnung (wird ignoriert):', createError.message);
       }
     } else {
-      // Passwort synchron halten + sicherstellen dass E-Mail bestaetigt ist
       await serviceClient.auth.admin.updateUserById(existingUser.id, {
         password: loginPassword,
         email_confirm: true,
