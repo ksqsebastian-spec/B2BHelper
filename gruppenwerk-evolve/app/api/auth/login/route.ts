@@ -24,15 +24,23 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    // Supabase-Benutzer automatisch erstellen falls noetig
+    // Supabase-Benutzer automatisch erstellen oder aktualisieren
     const serviceClient = await createServiceClient();
-    const { data: userList } = await serviceClient.auth.admin.listUsers();
-    const userExists = userList?.users?.some(
+    const { data: userList, error: listError } =
+      await serviceClient.auth.admin.listUsers();
+
+    if (listError) {
+      return NextResponse.json(
+        { error: `Supabase Admin-Fehler: ${listError.message}` },
+        { status: 500 }
+      );
+    }
+
+    const existingUser = userList?.users?.find(
       (u) => u.email === AUTH_EMAIL
     );
 
-    if (!userExists) {
-      // Erstmalige Anmeldung: Benutzer anlegen
+    if (!existingUser) {
       const { error: createError } =
         await serviceClient.auth.admin.createUser({
           email: AUTH_EMAIL,
@@ -41,22 +49,17 @@ export async function POST(request: Request): Promise<NextResponse> {
         });
 
       if (createError) {
-        console.error('Benutzer konnte nicht erstellt werden:', createError);
         return NextResponse.json(
-          { error: 'Anmeldung fehlgeschlagen.' },
+          { error: `Benutzer erstellen fehlgeschlagen: ${createError.message}` },
           { status: 500 }
         );
       }
     } else {
-      // Passwort aktualisieren falls LOGIN_PASSWORD geaendert wurde
-      const existingUser = userList?.users?.find(
-        (u) => u.email === AUTH_EMAIL
-      );
-      if (existingUser) {
-        await serviceClient.auth.admin.updateUserById(existingUser.id, {
-          password: loginPassword,
-        });
-      }
+      // Passwort synchron halten + sicherstellen dass E-Mail bestaetigt ist
+      await serviceClient.auth.admin.updateUserById(existingUser.id, {
+        password: loginPassword,
+        email_confirm: true,
+      });
     }
 
     // Supabase-Session erstellen (setzt Auth-Cookies)
@@ -67,9 +70,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     });
 
     if (signInError) {
-      console.error('Supabase-Login fehlgeschlagen:', signInError);
       return NextResponse.json(
-        { error: 'Anmeldung fehlgeschlagen.' },
+        { error: `Supabase-Login: ${signInError.message}` },
         { status: 500 }
       );
     }
