@@ -252,7 +252,11 @@ CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO user_profiles (id)
-    VALUES (NEW.id);
+    VALUES (NEW.id)
+    ON CONFLICT (id) DO NOTHING;
+    RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+    -- Tabelle existiert evtl. noch nicht, User trotzdem anlegen
     RETURN NEW;
 END;
 $$ language 'plpgsql' SECURITY DEFINER;
