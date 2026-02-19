@@ -1,5 +1,6 @@
 {
+  "framework": "nextjs",
   "buildCommand": "cd gruppenwerk-evolve && npm run build",
-  "outputDirectory": "gruppenwerk-evolve/.next",
-  "installCommand": "cd gruppenwerk-evolve && npm install"
+  "installCommand": "cd gruppenwerk-evolve && npm install",
+  "outputDirectory": "gruppenwerk-evolve/.next"
 }
