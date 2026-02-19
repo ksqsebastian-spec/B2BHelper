@@ -27,21 +27,6 @@ export default function SettingsPage(): React.ReactNode {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [exportFormat, setExportFormat] = useState<ExportFormat>('generic');
-  const [currentEmail, setCurrentEmail] = useState<string>('');
-
-  // Aktuelle E-Mail-Adresse des Benutzers laden
-  useEffect(() => {
-    const loadUser = async (): Promise<void> => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user?.email) {
-        setCurrentEmail(user.email);
-      }
-    };
-    loadUser();
-  }, []);
-
   // Benutzerprofil laden
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['settings', 'profile'],
@@ -243,22 +228,11 @@ export default function SettingsPage(): React.ReactNode {
               Anmeldedaten und Sitzungsverwaltung
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Aktuelle E-Mail */}
-            <div className="space-y-1">
-              <Label>E-Mail-Adresse</Label>
-              <p className="text-sm text-foreground">
-                {currentEmail || '—'}
-              </p>
-            </div>
-
-            {/* Abmelden */}
-            <div className="border-t pt-4">
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="h-4 w-4" />
-                Abmelden
-              </Button>
-            </div>
+          <CardContent>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="h-4 w-4" />
+              Abmelden
+            </Button>
           </CardContent>
         </Card>
       </section>
