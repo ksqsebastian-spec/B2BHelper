@@ -12,10 +12,14 @@ export const leadRowSchema = z.object({
     .min(1, 'Firmenname darf nicht leer sein.')
     .max(255, 'Firmenname darf maximal 255 Zeichen lang sein.'),
   contact_email: z
-    .string({ required_error: 'E-Mail-Adresse ist erforderlich.' })
-    .min(1, 'E-Mail-Adresse darf nicht leer sein.')
-    .email('Bitte geben Sie eine gueltige E-Mail-Adresse ein.')
-    .max(255, 'E-Mail-Adresse darf maximal 255 Zeichen lang sein.'),
+    .string()
+    .max(255, 'E-Mail-Adresse darf maximal 255 Zeichen lang sein.')
+    .refine(
+      (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+      'Bitte geben Sie eine gueltige E-Mail-Adresse ein.'
+    )
+    .nullish()
+    .transform((val) => val || null),
   contact_name: z
     .string()
     .max(255, 'Kontaktname darf maximal 255 Zeichen lang sein.')

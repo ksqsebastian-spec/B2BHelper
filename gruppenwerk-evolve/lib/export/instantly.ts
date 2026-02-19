@@ -61,7 +61,7 @@ function formatInstantlyRow(lead: Lead, email: GeneratedEmail): InstantlyRow {
   const { firstName, lastName } = splitName(lead.contact_name);
 
   return {
-    email: lead.contact_email,
+    email: lead.contact_email ?? '',
     first_name: firstName,
     last_name: lastName,
     company_name: lead.company_name,

@@ -54,7 +54,7 @@ function escapeCsvValue(value: string): string {
  */
 function formatGenericRow(lead: Lead, email: GeneratedEmail): GenericRow {
   return {
-    email: lead.contact_email,
+    email: lead.contact_email ?? '',
     contactName: lead.contact_name ?? '',
     companyName: lead.company_name,
     industry: lead.industry ?? '',

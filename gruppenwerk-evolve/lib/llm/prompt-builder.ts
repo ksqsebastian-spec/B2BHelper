@@ -13,7 +13,9 @@ function buildLeadInfoBlock(lead: Lead): string {
   const lines: string[] = [];
 
   lines.push(`Firmenname: ${lead.company_name}`);
-  lines.push(`E-Mail: ${lead.contact_email}`);
+  if (lead.contact_email) {
+    lines.push(`E-Mail: ${lead.contact_email}`);
+  }
 
   if (lead.contact_name) {
     lines.push(`Kontaktperson: ${lead.contact_name}`);

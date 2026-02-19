@@ -46,7 +46,7 @@ export interface Lead {
   batch_id: string;
   user_id: string;
   company_name: string;
-  contact_email: string;
+  contact_email?: string | null;
   contact_name?: string | null;
   industry?: string | null;
   company_city?: string | null;

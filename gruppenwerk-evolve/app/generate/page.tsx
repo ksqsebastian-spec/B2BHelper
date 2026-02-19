@@ -311,7 +311,7 @@ export default function GeneratePage(): React.ReactNode {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{lead.company_name}</p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {lead.contact_email}
+                        {lead.contact_email ?? lead.industry ?? '—'}
                       </p>
                     </div>
                     {lead.email_generated && (

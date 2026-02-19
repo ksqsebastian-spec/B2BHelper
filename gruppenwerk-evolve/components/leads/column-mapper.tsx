@@ -28,7 +28,7 @@ interface ColumnMapperProps {
 // Verfuegbare App-Felder mit Beschriftung und Pflichtfeld-Markierung
 const MAPPING_FIELDS: AppFieldDefinition[] = [
   { key: 'company_name', label: 'Firmenname', required: true },
-  { key: 'contact_email', label: 'E-Mail', required: true },
+  { key: 'contact_email', label: 'E-Mail', required: false },
   { key: 'contact_name', label: 'Ansprechpartner', required: false },
   { key: 'industry', label: 'Branche', required: false },
   { key: 'company_city', label: 'Stadt', required: false },
@@ -152,21 +152,61 @@ function autoMapColumn(csvHeader: string): MappingField | '' {
 }
 
 /**
+ * Prueft ob die meisten Werte einer Spalte wie E-Mail-Adressen aussehen.
+ * Schaut sich bis zu 10 Zeilen an und prueft auf "@"-Zeichen.
+ */
+function looksLikeEmailColumn(
+  header: string,
+  previewData: Record<string, string>[]
+): boolean {
+  const samples = previewData.slice(0, 10);
+  if (samples.length === 0) return false;
+
+  let emailLike = 0;
+  let nonEmpty = 0;
+  for (const row of samples) {
+    const val = row[header]?.trim();
+    if (!val) continue;
+    nonEmpty++;
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+      emailLike++;
+    }
+  }
+
+  // Mindestens 1 nicht-leerer Wert und >50% sehen wie E-Mail aus
+  return nonEmpty > 0 && emailLike / nonEmpty > 0.5;
+}
+
+/**
  * Erstellt das initiale Auto-Mapping fuer alle CSV-Spalten.
  * Jedes App-Feld wird nur einmal vergeben (kein Duplikat).
+ * Optional: previewData fuer datenbasierte Erkennung (z.B. E-Mail anhand "@").
  */
 export function buildAutoMapping(
-  csvHeaders: string[]
+  csvHeaders: string[],
+  previewData?: Record<string, string>[]
 ): Record<string, MappingField | ''> {
   const initial: Record<string, MappingField | ''> = {};
   const usedFields = new Set<MappingField>();
 
-  // Erste Runde: Auto-Zuordnung
+  // Erste Runde: Auto-Zuordnung anhand der Spaltennamen
   for (const header of csvHeaders) {
     const autoMapped = autoMapColumn(header);
     if (autoMapped && !usedFields.has(autoMapped)) {
       initial[header] = autoMapped;
       usedFields.add(autoMapped);
+    }
+  }
+
+  // Zweite Runde: Datenbasierte Erkennung fuer noch nicht zugeordnete E-Mail-Spalten
+  if (previewData && previewData.length > 0 && !usedFields.has('contact_email')) {
+    for (const header of csvHeaders) {
+      if (header in initial) continue; // schon zugeordnet
+      if (looksLikeEmailColumn(header, previewData)) {
+        initial[header] = 'contact_email';
+        usedFields.add('contact_email');
+        break; // nur die erste E-Mail-Spalte nehmen
+      }
     }
   }
 
@@ -209,7 +249,7 @@ export function ColumnMapper({
   autoConfirm = false,
 }: ColumnMapperProps): React.ReactNode {
   const [mapping, setMapping] = useState<Record<string, MappingField | ''>>(
-    () => buildAutoMapping(csvHeaders)
+    () => buildAutoMapping(csvHeaders, previewData)
   );
   const [autoConfirmed, setAutoConfirmed] = useState(false);
 

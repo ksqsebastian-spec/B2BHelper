@@ -7,7 +7,7 @@ interface EmailWithLead {
   body: string;
   leads: {
     company_name: string;
-    contact_email: string;
+    contact_email: string | null;
     contact_name: string | null;
   };
 }
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       .map((email) => {
         const lead = email.leads;
         return [
-          escapeCsv(lead.contact_email),
+          escapeCsv(lead.contact_email ?? ''),
           escapeCsv(getFirstName(lead.contact_name)),
           escapeCsv(getLastName(lead.contact_name)),
           escapeCsv(lead.company_name),
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       .map((email) => {
         const lead = email.leads;
         return [
-          escapeCsv(lead.contact_email),
+          escapeCsv(lead.contact_email ?? ''),
           escapeCsv(getFirstName(lead.contact_name)),
           escapeCsv(getLastName(lead.contact_name)),
           escapeCsv(lead.company_name),
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       .map((email) => {
         const lead = email.leads;
         return [
-          escapeCsv(lead.contact_email),
+          escapeCsv(lead.contact_email ?? ''),
           escapeCsv(lead.contact_name),
           escapeCsv(lead.company_name),
           escapeCsv(email.subject),
