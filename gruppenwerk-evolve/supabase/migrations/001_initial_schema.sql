@@ -245,22 +245,4 @@ CREATE TRIGGER update_column_mappings_updated_at
     BEFORE UPDATE ON column_mappings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- ============================================
--- Automatisches User-Profil bei Registrierung
--- ============================================
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO user_profiles (id)
-    VALUES (NEW.id)
-    ON CONFLICT (id) DO NOTHING;
-    RETURN NEW;
-EXCEPTION WHEN OTHERS THEN
-    -- Tabelle existiert evtl. noch nicht, User trotzdem anlegen
-    RETURN NEW;
-END;
-$$ language 'plpgsql' SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_created
-    AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+-- User-Profil wird vom App-Code erstellt (kein Trigger noetig)

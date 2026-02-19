@@ -18,6 +18,9 @@ import { CsvUpload } from '@/components/leads/csv-upload';
 import {
   ColumnMapper,
   type ColumnMappingResult,
+  buildAutoMapping,
+  isMappingValid,
+  extractMappingResult,
 } from '@/components/leads/column-mapper';
 import {
   ImportPreview,
@@ -47,6 +50,30 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+// CSV-Daten gemaess Mapping in ParsedLeads umwandeln
+function buildLeads(
+  csvData: Record<string, string>[],
+  mapping: ColumnMappingResult
+): ParsedLead[] {
+  return csvData.map((row) => {
+    const lead: Record<string, string | Record<string, string>> = {
+      raw_data: { ...row },
+    };
+
+    for (const [csvCol, appField] of Object.entries(mapping)) {
+      const value = row[csvCol];
+      if (value !== undefined && value.trim() !== '') {
+        lead[appField] = value.trim();
+      }
+    }
+
+    if (!lead['company_name']) lead['company_name'] = '';
+    if (!lead['contact_email']) lead['contact_email'] = '';
+
+    return lead as unknown as ParsedLead;
+  });
+}
+
 // CSV-Import Seite mit mehrstufigem Workflow
 export default function LeadsImportPage(): React.ReactNode {
   const router = useRouter();
@@ -68,18 +95,34 @@ export default function LeadsImportPage(): React.ReactNode {
       setFileName(loadedFileName);
 
       // Spaltenkoepfe aus der ersten Zeile extrahieren
-      if (data.length > 0) {
-        const headers = Object.keys(data[0]).filter(
-          (h) => h.trim() !== ''
-        );
-        setCsvHeaders(headers);
-      }
+      const headers =
+        data.length > 0
+          ? Object.keys(data[0]).filter((h) => h.trim() !== '')
+          : [];
+      setCsvHeaders(headers);
 
-      // Zum Mapping-Schritt wechseln
-      setCurrentStep('mapping');
-      toast.success(
-        `${data.length} Zeilen aus "${loadedFileName}" geladen`
-      );
+      // Auto-Mapping versuchen
+      const autoMapping = buildAutoMapping(headers);
+
+      if (isMappingValid(autoMapping)) {
+        // Pflichtfelder erkannt → Mapping ueberspringen, direkt zur Vorschau
+        const mapping = extractMappingResult(autoMapping);
+        setColumnMapping(mapping);
+
+        const leads = buildLeads(data, mapping);
+        setParsedLeads(leads);
+
+        setCurrentStep('preview');
+        toast.success(
+          `${data.length} Zeilen geladen – Spalten automatisch erkannt`
+        );
+      } else {
+        // Pflichtfelder fehlen → manuelles Mapping noetig
+        setCurrentStep('mapping');
+        toast.success(
+          `${data.length} Zeilen aus "${loadedFileName}" geladen`
+        );
+      }
     },
     []
   );
@@ -94,33 +137,7 @@ export default function LeadsImportPage(): React.ReactNode {
   const handleMappingComplete = useCallback(
     (mapping: ColumnMappingResult): void => {
       setColumnMapping(mapping);
-
-      // CSV-Daten gemaess Mapping in ParsedLeads umwandeln
-      const leads: ParsedLead[] = csvData.map((row) => {
-        const lead: Record<string, string | Record<string, string>> = {
-          raw_data: { ...row },
-        };
-
-        // Werte anhand des Mappings zuordnen
-        for (const [csvCol, appField] of Object.entries(mapping)) {
-          const value = row[csvCol];
-          if (value !== undefined && value.trim() !== '') {
-            lead[appField] = value.trim();
-          }
-        }
-
-        // Standardwerte fuer Pflichtfelder setzen falls leer
-        if (!lead['company_name']) {
-          lead['company_name'] = '';
-        }
-        if (!lead['contact_email']) {
-          lead['contact_email'] = '';
-        }
-
-        return lead as unknown as ParsedLead;
-      });
-
-      setParsedLeads(leads);
+      setParsedLeads(buildLeads(csvData, mapping));
       setCurrentStep('preview');
     },
     [csvData]
