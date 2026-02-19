@@ -76,9 +76,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('Login-Fehler:', err);
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Login-Fehler:', message);
     return NextResponse.json(
-      { error: 'Ein unbekannter Fehler ist aufgetreten.' },
+      { error: `Server-Fehler: ${message}` },
       { status: 500 }
     );
   }
