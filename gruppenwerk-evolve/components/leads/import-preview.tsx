@@ -24,7 +24,7 @@ const MAX_PREVIEW_ROWS = 10;
 /** Ein vorbereiteter Lead-Eintrag vor dem Import */
 export interface ParsedLead {
   company_name: string;
-  contact_email: string;
+  contact_email?: string;
   contact_name?: string;
   industry?: string;
   company_city?: string;
@@ -91,13 +91,15 @@ function validateLeads(leads: ParsedLead[]): ValidationInfo {
       issueSet.add('Einige Zeilen haben keinen Firmennamen');
     }
 
-    // E-Mail ist Pflicht und muss gueltig sein
-    if (!lead.contact_email || lead.contact_email.trim() === '') {
-      isValid = false;
-      issueSet.add('Einige Zeilen haben keine E-Mail-Adresse');
-    } else if (!isValidEmail(lead.contact_email.trim())) {
-      isValid = false;
-      issueSet.add('Einige E-Mail-Adressen sind ungültig');
+    // E-Mail: optional, aber wenn vorhanden muss sie gueltig sein
+    if (lead.contact_email && lead.contact_email.trim() !== '') {
+      if (!isValidEmail(lead.contact_email.trim())) {
+        isValid = false;
+        issueSet.add('Einige E-Mail-Adressen sind ungültig');
+      }
+    } else {
+      // Nur als Hinweis, nicht als Fehler
+      issueSet.add('Einige Zeilen haben keine E-Mail-Adresse – Leads werden trotzdem importiert');
     }
 
     if (isValid) {
@@ -210,8 +212,8 @@ export function ImportPreview({
               const hasCompanyName =
                 lead.company_name && lead.company_name.trim() !== '';
               const hasValidEmail =
-                lead.contact_email &&
-                lead.contact_email.trim() !== '' &&
+                !lead.contact_email ||
+                lead.contact_email.trim() === '' ||
                 isValidEmail(lead.contact_email.trim());
               const rowValid = hasCompanyName && hasValidEmail;
 

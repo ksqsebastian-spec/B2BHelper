@@ -68,7 +68,7 @@ function formatMailchimpRow(lead: Lead, email: GeneratedEmail): MailchimpRow {
   }
 
   return {
-    emailAddress: lead.contact_email,
+    emailAddress: lead.contact_email ?? '',
     firstName,
     lastName,
     company: lead.company_name,

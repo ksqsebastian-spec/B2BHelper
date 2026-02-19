@@ -41,7 +41,7 @@ export interface MappingFieldConfig {
 /** Alle verfuegbaren App-Felder mit deutschen Bezeichnungen */
 export const MAPPING_FIELDS: readonly MappingFieldConfig[] = [
   { field: 'company_name', label: 'Firmenname', required: true },
-  { field: 'contact_email', label: 'E-Mail-Adresse', required: true },
+  { field: 'contact_email', label: 'E-Mail-Adresse', required: false },
   { field: 'contact_name', label: 'Kontaktname', required: false },
   { field: 'industry', label: 'Branche', required: false },
   { field: 'company_city', label: 'Stadt', required: false },

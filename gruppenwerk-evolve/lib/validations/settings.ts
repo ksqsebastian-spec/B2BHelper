@@ -105,10 +105,10 @@ export const columnMappingSchema = z.object({
   mapping: z.record(z.string(), z.string()).refine(
     (mapping) => {
       const values = Object.values(mapping).filter((v) => v.length > 0);
-      return values.includes('company_name') && values.includes('contact_email');
+      return values.includes('company_name');
     },
     {
-      message: 'Firmenname und E-Mail-Adresse muessen zugeordnet werden.',
+      message: 'Firmenname muss zugeordnet werden.',
     }
   ),
   isDefault: z.boolean().optional().default(false),

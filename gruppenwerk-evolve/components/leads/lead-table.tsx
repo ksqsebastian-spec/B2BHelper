@@ -255,7 +255,7 @@ export function LeadTable({
                 {lead.company_name}
               </TableCell>
               <TableCell className="max-w-[200px] truncate">
-                {lead.contact_email}
+                {lead.contact_email ?? '—'}
               </TableCell>
               <TableCell>{lead.contact_name ?? '—'}</TableCell>
               <TableCell>{lead.industry ?? '—'}</TableCell>

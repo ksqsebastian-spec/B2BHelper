@@ -172,7 +172,7 @@ export function EmailTable({
                     {email.lead.company_name}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {email.lead.contact_email}
+                    {email.lead.contact_email ?? '—'}
                   </p>
                 </div>
               </td>

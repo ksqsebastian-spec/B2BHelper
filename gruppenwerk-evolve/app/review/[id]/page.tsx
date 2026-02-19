@@ -161,7 +161,7 @@ export default function EmailDetailPage(): React.ReactNode {
   /** mailto:-Link oeffnen */
   const handleMailto = (): void => {
     if (!emailData) return;
-    const mailtoUrl = `mailto:${encodeURIComponent(emailData.lead.contact_email)}?subject=${encodeURIComponent(editSubject)}&body=${encodeURIComponent(editBody)}`;
+    const mailtoUrl = `mailto:${encodeURIComponent(emailData.lead.contact_email ?? '')}?subject=${encodeURIComponent(editSubject)}&body=${encodeURIComponent(editBody)}`;
     window.open(mailtoUrl, '_blank');
   };
 
@@ -232,7 +232,7 @@ export default function EmailDetailPage(): React.ReactNode {
             <Mail className="h-4 w-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">E-Mail</p>
-              <p className="text-sm font-medium text-foreground">{lead.contact_email}</p>
+              <p className="text-sm font-medium text-foreground">{lead.contact_email ?? '—'}</p>
             </div>
           </div>
 

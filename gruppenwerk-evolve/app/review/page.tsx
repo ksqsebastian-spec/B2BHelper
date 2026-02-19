@@ -135,7 +135,7 @@ export default function ReviewPage(): React.ReactNode {
       (email) =>
         email.lead.company_name.toLowerCase().includes(lowerQuery) ||
         email.subject.toLowerCase().includes(lowerQuery) ||
-        email.lead.contact_email.toLowerCase().includes(lowerQuery)
+        (email.lead.contact_email ?? '').toLowerCase().includes(lowerQuery)
     );
   }, [allEmails, searchQuery]);
 

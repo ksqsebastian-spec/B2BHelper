@@ -68,7 +68,6 @@ function buildLeads(
     }
 
     if (!lead['company_name']) lead['company_name'] = '';
-    if (!lead['contact_email']) lead['contact_email'] = '';
 
     return lead as unknown as ParsedLead;
   });
@@ -101,8 +100,8 @@ export default function LeadsImportPage(): React.ReactNode {
           : [];
       setCsvHeaders(headers);
 
-      // Auto-Mapping versuchen
-      const autoMapping = buildAutoMapping(headers);
+      // Auto-Mapping versuchen (mit Vorschaudaten fuer datenbasierte Erkennung)
+      const autoMapping = buildAutoMapping(headers, data.slice(0, 10));
 
       if (isMappingValid(autoMapping)) {
         // Pflichtfelder erkannt → Mapping ueberspringen, direkt zur Vorschau
@@ -157,15 +156,19 @@ export default function LeadsImportPage(): React.ReactNode {
         throw new Error('Nicht authentifiziert. Bitte melden Sie sich an.');
       }
 
-      // Nur gueltige Leads filtern
-      const validLeads = parsedLeads.filter(
-        (lead) =>
-          lead.company_name &&
-          lead.company_name.trim() !== '' &&
+      // Nur gueltige Leads filtern (Firmenname Pflicht, E-Mail optional aber wenn vorhanden gueltig)
+      const validLeads = parsedLeads.filter((lead) => {
+        if (!lead.company_name || lead.company_name.trim() === '') return false;
+        // E-Mail ist optional – aber ungueltige Adressen ausfiltern
+        if (
           lead.contact_email &&
           lead.contact_email.trim() !== '' &&
-          isValidEmail(lead.contact_email.trim())
-      );
+          !isValidEmail(lead.contact_email.trim())
+        ) {
+          return false;
+        }
+        return true;
+      });
 
       if (validLeads.length === 0) {
         throw new Error('Keine gültigen Leads zum Importieren vorhanden.');
@@ -202,7 +205,7 @@ export default function LeadsImportPage(): React.ReactNode {
           batch_id: batch.id,
           user_id: user.id,
           company_name: lead.company_name.trim(),
-          contact_email: lead.contact_email.trim(),
+          contact_email: lead.contact_email?.trim() || null,
           contact_name: lead.contact_name?.trim() || null,
           industry: lead.industry?.trim() || null,
           company_city: lead.company_city?.trim() || null,
